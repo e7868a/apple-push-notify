@@ -199,13 +199,21 @@ int verify_connection(SSL* ssl, const char* peername)
 
 void json_escape(std::string& str)
 {
-    size_t found = 0;
-    while ((found = str.find('\\',found)) != std::string::npos) {
+    size_t found = -2;
+    while ((found = str.find('\\',found + 2)) != std::string::npos) {
         str.replace(found, 1, "\\\\");
     }
-    found = 0;
-    while ((found = str.find('"',found)) != std::string::npos) {
+    found = -2;
+    while ((found = str.find('"',found + 2)) != std::string::npos) {
         str.replace(found, 1, "\\\"");
+    }
+    found = -2;
+    while ((found = str.find('\n',found + 2)) != std::string::npos) {
+        str.replace(found, 1, "\\n");
+    }
+    found = -2;
+    while ((found = str.find('/',found + 2)) != std::string::npos) {
+        str.replace(found, 1, "\\/");
     }
 }
 
@@ -242,6 +250,7 @@ int build_payload(char* buf, int &buflen, const char* msg, int badage, const cha
         return -1;
     }
 
+    fprintf(stderr, "%s\n", result.c_str());
     if ((int)result.length() < buflen) {
         strcpy(buf, result.c_str());
     } else {
@@ -367,6 +376,9 @@ int send_message_2(SSL *ssl, const char* token, uint32_t id, uint32_t expire,
 
 int main(int argc, char** argv)
 {
+    const char * msg = NULL;
+    if (argc > 1) msg = argv[1];
+
     init_openssl();
 
     // 初始化Context
@@ -410,10 +422,12 @@ int main(int argc, char** argv)
     uint32_t msgid = 1;
     uint32_t expire = time(NULL) + 24 * 3600;   // expire 1 day
 
+    if (!msg) {
+        msg = "\xe4\xbd\xa0\xe5\xa5\xbd\xef\xbc\x8c\xe7\xbe\x8e\xe5\xa5\xb3";
+    }
     // 发送一条消息
     const char* token = "0a8b9e7cbe68616cd5470e4c8abb4c1a3f4ba2bee4ca113ff02ae2c325948b8a";
-    if (send_message_2(ssl, token, msgid++, expire, 
-                "Hello, This is a push message", 1, "default") <= 0) {
+    if (send_message_2(ssl, token, msgid++, expire, msg, 1, "default") <= 0) {
         fprintf(stderr, "send failed: %s\n",
             ERR_reason_error_string(ERR_get_error()));
     }
