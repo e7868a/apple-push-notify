@@ -250,7 +250,9 @@ int build_payload(char* buf, int &buflen, const char* msg, int badage, const cha
         return -1;
     }
 
+#ifdef _DEBUG
     fprintf(stderr, "%s\n", result.c_str());
+#endif
     if ((int)result.length() < buflen) {
         strcpy(buf, result.c_str());
     } else {
@@ -423,7 +425,7 @@ int main(int argc, char** argv)
     uint32_t expire = time(NULL) + 24 * 3600;   // expire 1 day
 
     if (!msg) {
-        msg = "\xe4\xbd\xa0\xe5\xa5\xbd\xef\xbc\x8c\xe7\xbe\x8e\xe5\xa5\xb3";
+        msg = "hello\nThis is a test message";
     }
     // 发送一条消息
     const char* token = "0a8b9e7cbe68616cd5470e4c8abb4c1a3f4ba2bee4ca113ff02ae2c325948b8a";
